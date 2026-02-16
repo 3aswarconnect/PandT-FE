@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 
-const MOCK_POSTED_JOBS = [
+const MOCK_POSTED_JOBSs = [
   { id: '1', title: 'House Painting - 2 Rooms', category: 'Painting', amount: '₹1500', location: 'Koramangala', duration: '1 day', status: 'open', applicants: 3 },
   { id: '2', title: 'Delivery of Furniture', category: 'Delivery', amount: '₹800', location: 'Indiranagar', duration: '3 hours', status: 'in_progress', applicants: 1 },
 ];
 
 export default function GiveJobScreen({ navigation }) {
-  const [jobs] = useState(MOCK_POSTED_JOBS);
+  const [jobs] = useState(MOCK_POSTED_JOBSs);
 
   const getStatusColor = (status) => {
     if (status === 'open') return '#4CAF50';
