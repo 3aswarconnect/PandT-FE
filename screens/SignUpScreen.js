@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import API from "../services/api";
 
 export default function SignUpScreen({ navigation, route }) {
   const { userType } = route.params;
@@ -10,35 +11,60 @@ export default function SignUpScreen({ navigation, route }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSignUp = async () => {
-    if (!name || !phone || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill all required fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
 
-    // Mock signup - replace with real API
-    await AsyncStorage.setItem('userToken', 'mock-token');
-    await AsyncStorage.setItem('userType', userType);
-    await AsyncStorage.setItem('userName', name);
-    await AsyncStorage.setItem('userPhone', phone);
+const handleSignUp = async () => {
+  if (!name || !phone || !password || !confirmPassword) {
+    Alert.alert("Error", "Please fill all required fields");
+    return;
+  }
 
-    Alert.alert('Success', 'Account created successfully!', [
+  if (password !== confirmPassword) {
+    Alert.alert("Error", "Passwords do not match");
+    return;
+  }
+
+  try {
+    const res = await API.post("/auth/signup", {
+      name,
+      phone,
+      password,
+      role: userType,
+      email // employer or worker
+    });
+
+    const { token, user } = res.data;
+
+    // Store JWT
+    await AsyncStorage.setItem("userToken", token);
+    await AsyncStorage.setItem("userType", user.role);
+    await AsyncStorage.setItem("userName", user.name);
+    await AsyncStorage.setItem("userPhone", user.phone);
+
+    Alert.alert("Success", "Account created successfully!", [
       {
-        text: 'OK',
+        text: "OK",
         onPress: () => {
-          if (userType === 'employer') {
-            navigation.replace('GiveJob');
+          if (user.role === "employer") {
+            navigation.replace("GiveJob");
           } else {
-            navigation.replace('WantJob');
+            navigation.replace("WantJob");
           }
         },
       },
     ]);
-  };
+  } catch (error) {
+    console.log(error.response?.data || error.message);
+      console.log("FULL ERROR:", error);
+  console.log("RESPONSE:", error.response);
+  console.log("MESSAGE:", error.message);
+
+    Alert.alert(
+      "Signup Failed",
+      error.response?.data?.message || "Something went wrong"
+    );
+  }
+};
+
 
   return (
     <ScrollView style={styles.container}>
@@ -56,7 +82,7 @@ export default function SignUpScreen({ navigation, route }) {
         <Text style={styles.label}>Phone Number *</Text>
         <TextInput style={styles.input} placeholder="Enter phone number" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
 
-        <Text style={styles.label}>Email (Optional)</Text>
+        <Text style={styles.label}>Email</Text>
         <TextInput style={styles.input} placeholder="Enter email" keyboardType="email-address" value={email} onChangeText={setEmail} />
 
         <Text style={styles.label}>Password *</Text>

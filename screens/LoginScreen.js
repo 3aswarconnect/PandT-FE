@@ -6,7 +6,7 @@ export default function LoginScreen({ navigation, route }) {
   const { userType } = route.params;
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-
+  console.log(userType)
   const handleLogin = async () => {
     if (!phone || !password) {
       Alert.alert('Error', 'Please fill all fields');
