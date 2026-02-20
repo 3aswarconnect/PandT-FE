@@ -1,28 +1,58 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import API from "../services/api";
 export default function LoginScreen({ navigation, route }) {
   const { userType } = route.params;
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  console.log(userType)
-  const handleLogin = async () => {
-    if (!phone || !password) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
-    // Mock login - replace with real API
-    await AsyncStorage.setItem('userToken', 'mock-token');
-    await AsyncStorage.setItem('userType', userType);
-    await AsyncStorage.setItem('userPhone', phone);
+  const [email,setEmail]= useState("");
 
-    if (userType === 'employer') {
-      navigation.replace('GiveJob');
-    } else {
-      navigation.replace('WantJob');
-    }
-  };
+const handleLogin = async () => {
+  console.log("calling")
+  if (!email || !password) {
+    Alert.alert("Error", "Please fill all required fields");
+    return;
+  } 
+  console.log(email,password)
+
+  try {
+    const res = await API.post("/auth/login", {
+      password,
+      role: userType,
+      email // employer or worker
+    });
+
+    const { token, user } = res.data;
+    console.log(res.data)
+
+    // Store JWT
+    await AsyncStorage.setItem("userToken", token);
+    await AsyncStorage.setItem("userType", user.role);
+
+    Alert.alert("Success", "Login successfully!", [
+      {
+        text: "OK",
+        onPress: () => {
+          if (user.role === "employer") {
+            navigation.replace("GiveJob");
+          } else {
+            navigation.replace("WantJob");
+          }
+        },
+      },
+    ]);
+  } catch (error) {
+    console.log(error.response?.data || error.message);
+      console.log("FULL ERROR:", error);
+  console.log("RESPONSE:", error.response);
+  console.log("MESSAGE:", error.message);
+
+    Alert.alert(
+      "Signup Failed",
+      error.response?.data?.message || "Something went wrong"
+    );
+  }
+};
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -34,13 +64,12 @@ export default function LoginScreen({ navigation, route }) {
       </View>
 
       <View style={styles.formSection}>
-        <Text style={styles.label}>Phone Number</Text>
+        <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter your phone number"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
+          placeholder="Enter your Email"
+          keyboardType="email-address"
+          onChangeText={setEmail}
         />
 
         <Text style={styles.label}>Password</Text>

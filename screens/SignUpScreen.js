@@ -5,15 +5,14 @@ import API from "../services/api";
 
 export default function SignUpScreen({ navigation, route }) {
   const { userType } = route.params;
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+ 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
 
 const handleSignUp = async () => {
-  if (!name || !phone || !password || !confirmPassword) {
+  if (!email ||  !password || !confirmPassword) {
     Alert.alert("Error", "Please fill all required fields");
     return;
   }
@@ -22,29 +21,28 @@ const handleSignUp = async () => {
     Alert.alert("Error", "Passwords do not match");
     return;
   }
+  console.log({ email, password });
+
 
   try {
     const res = await API.post("/auth/signup", {
-      name,
-      phone,
       password,
       role: userType,
-      email // employer or worker
+      email, // employer or worker
+
     });
 
-    const { token, user } = res.data;
+ const { token, role} = res.data;
 
-    // Store JWT
-    await AsyncStorage.setItem("userToken", token);
-    await AsyncStorage.setItem("userType", user.role);
-    await AsyncStorage.setItem("userName", user.name);
-    await AsyncStorage.setItem("userPhone", user.phone);
+await AsyncStorage.setItem("userToken", token);
+await AsyncStorage.setItem("userType", role);
+
 
     Alert.alert("Success", "Account created successfully!", [
       {
         text: "OK",
         onPress: () => {
-          if (user.role === "employer") {
+          if (role === "employer") {
             navigation.replace("GiveJob");
           } else {
             navigation.replace("WantJob");
@@ -54,10 +52,6 @@ const handleSignUp = async () => {
     ]);
   } catch (error) {
     console.log(error.response?.data || error.message);
-      console.log("FULL ERROR:", error);
-  console.log("RESPONSE:", error.response);
-  console.log("MESSAGE:", error.message);
-
     Alert.alert(
       "Signup Failed",
       error.response?.data?.message || "Something went wrong"
@@ -76,11 +70,6 @@ const handleSignUp = async () => {
       </View>
 
       <View style={styles.formSection}>
-        <Text style={styles.label}>Full Name *</Text>
-        <TextInput style={styles.input} placeholder="Enter your full name" value={name} onChangeText={setName} />
-
-        <Text style={styles.label}>Phone Number *</Text>
-        <TextInput style={styles.input} placeholder="Enter phone number" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
 
         <Text style={styles.label}>Email</Text>
         <TextInput style={styles.input} placeholder="Enter email" keyboardType="email-address" value={email} onChangeText={setEmail} />
