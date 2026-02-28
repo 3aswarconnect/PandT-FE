@@ -10,7 +10,7 @@ export default function GiveJobScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
 
 
-
+console.log("eswar",jobs)
   const getMyJobs = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");

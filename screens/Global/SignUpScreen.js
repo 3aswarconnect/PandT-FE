@@ -32,17 +32,17 @@ const handleSignUp = async () => {
 
     });
 
- const { token, role} = res.data;
-
-await AsyncStorage.setItem("userToken", token);
-await AsyncStorage.setItem("userType", role);
-
+ const { token, user}= res.data;
+   
+    await AsyncStorage.setItem("userToken", token);
+    await AsyncStorage.setItem("userType", user.role);
+    await AsyncStorage.setItem("userId",user._id)
 
     Alert.alert("Success", "Account created successfully!", [
       {
         text: "OK",
         onPress: () => {
-          if (role === "employer") {
+          if (userType === "employer") {
             navigation.replace("GiveJob");
           } else {
             navigation.replace("WantJob");

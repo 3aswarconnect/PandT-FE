@@ -28,6 +28,7 @@ const handleLogin = async () => {
     // Store JWT
     await AsyncStorage.setItem("userToken", token);
     await AsyncStorage.setItem("userType", user.role);
+    await AsyncStorage.setItem("userId",user._id)
 
     Alert.alert("Success", "Login successfully!", [
       {

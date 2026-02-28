@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,21 +6,78 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import API from "../../services/api";
 
 export default function JobDetailScreen({ navigation, route }) {
   const { job, isOwner } = route.params;
-  console.log(job)
-  const [applied, setApplied] = useState(false);
 
-  const handleApply = () => {
+  const [applied, setApplied] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // ✅ Check if already applied when screen loads
+ useEffect(() => {
+  const checkIfApplied = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) return;
+
+      if (job?.applications?.length > 0) {
+        const already = job.applications.find(
+          (a) =>
+            (typeof a.worker === "string"
+              ? a.worker
+              : a.worker?._id) === userId
+        );
+
+        if (already) {
+          setApplied(true);
+        }
+      }
+    } catch (err) {
+      console.log("Check applied error:", err);
+    }
+  };
+
+  checkIfApplied();
+}, [job]);
+
+  // ✅ Apply Function
+  const handleApply = async () => {
     Alert.alert("Apply for Job", "Are you sure you want to apply?", [
       { text: "Cancel" },
       {
         text: "Apply",
-        onPress: () => {
-          setApplied(true);
-          Alert.alert("Applied!", "Waiting for employer approval.");
+        onPress: async () => {
+          try {
+            setLoading(true);
+
+      const token = await AsyncStorage.getItem("userToken");
+
+            const res = await API.post(
+              `/jobs/${job._id}/apply`,
+              {},
+              {
+                headers: {
+                  authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            setApplied(true);
+            Alert.alert("Success", "Application sent successfully!");
+          } catch (error) {
+            console.log(error.response?.data || error.message);
+
+            Alert.alert(
+              "Error",
+              error.response?.data?.message || "Something went wrong"
+            );
+          } finally {
+            setLoading(false);
+          }
         },
       },
     ]);
@@ -75,15 +132,24 @@ export default function JobDetailScreen({ navigation, route }) {
 
       {/* Apply Button */}
       {!isOwner && !applied && (
-        <TouchableOpacity style={styles.actionBtn} onPress={handleApply}>
-          <Text style={styles.actionBtnText}>Apply for this Job</Text>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={handleApply}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.actionBtnText}>Apply for this Job</Text>
+          )}
         </TouchableOpacity>
       )}
 
+      {/* Pending Status */}
       {!isOwner && applied && (
         <View style={styles.pendingBox}>
           <Text style={styles.pendingText}>
-            ⏳ Application sent. Waiting for approval...
+            ⏳ Application sent. Waiting for employer approval...
           </Text>
         </View>
       )}
@@ -94,7 +160,11 @@ export default function JobDetailScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F5F5", padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    padding: 16,
+  },
 
   card: {
     backgroundColor: "#fff",

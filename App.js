@@ -6,7 +6,7 @@ import LoginScreen from './screens/Global/LoginScreen';
 import SignUpScreen from './screens/Global/SignUpScreen';
 import GiveJobScreen from './screens/Employers/GiveJobScreen';
 import WantJobScreen from './screens/Workers/WantJobScreen';
-import JobDetailScreen from './screens/JobDetailScreen';
+import JobDetailScreen from './screens/Workers/JobDetailScreen';
 import MyJobsScreen from './screens/MyJobsScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import PostJobScreen from './screens/Employers/PostJobScreen';
