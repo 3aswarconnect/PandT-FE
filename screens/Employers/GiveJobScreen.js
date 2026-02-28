@@ -1,14 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import API from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const MOCK_POSTED_JOBSs = [
-  { id: '1', title: 'House Painting - 2 Rooms', category: 'Painting', amount: '₹1500', location: 'Koramangala', duration: '1 day', status: 'open', applicants: 3 },
-  { id: '2', title: 'Delivery of Furniture', category: 'Delivery', amount: '₹800', location: 'Indiranagar', duration: '3 hours', status: 'in_progress', applicants: 1 },
-];
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 export default function GiveJobScreen({ navigation }) {
-  const [jobs] = useState(MOCK_POSTED_JOBSs);
+  const [jobs, setJobs] = useState([]);
 
+
+
+  const getMyJobs = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+
+      const res = await API.get("jobs/my-jobs/", {
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("API RESPONSE:", res.data);
+
+      setJobs(res.data);   // 🔥 THIS WAS MISSING
+
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+    }
+  };
+useFocusEffect(
+  useCallback(() => {
+    getMyJobs();
+  }, [])
+);
   const getStatusColor = (status) => {
     if (status === 'open') return '#4CAF50';
     if (status === 'in_progress') return '#FF9800';
@@ -18,21 +43,41 @@ export default function GiveJobScreen({ navigation }) {
   const renderJob = ({ item }) => (
     <TouchableOpacity
       style={styles.jobCard}
-      onPress={() => navigation.navigate('JobDetail', { job: item, isOwner: true })}
+      onPress={() => navigation.navigate('JobStatus', { job: item, isOwner: true })}
     >
       <View style={styles.jobHeader}>
-        <Text style={styles.jobTitle}>{item.title}</Text>
+        <Text style={styles.jobTitle}>
+          {item.title ?? ''}
+        </Text>
+
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status === 'in_progress' ? 'In Progress' : 'Open'}</Text>
+          <Text style={styles.statusText}>
+            {item.status === 'in_progress' ? 'In Progress' : 'Open'}
+          </Text>
         </View>
       </View>
-      <Text style={styles.jobCategory}>{item.category}</Text>
+
+      <Text style={styles.jobCategory}>
+        {item.category ?? ''}
+      </Text>
+
       <View style={styles.jobMeta}>
-        <Text style={styles.metaText}>💰 {item.amount}</Text>
-        <Text style={styles.metaText}>📍 {item.location}</Text>
-        <Text style={styles.metaText}>⏱ {item.duration}</Text>
+        <Text style={styles.metaText}>
+          {`💰 ₹${item.amount ?? 0}`}
+        </Text>
+
+        <Text style={styles.metaText}>
+          {`📍 ${item.location?.address ?? ''}`}
+        </Text>
+
+        <Text style={styles.metaText}>
+          {`⏱ ${item.duration?.value ?? ''} ${item.duration?.unit ?? ''}`}
+        </Text>
       </View>
-      <Text style={styles.applicants}>{item.applicants} applicant(s)</Text>
+
+      <Text style={styles.applicants}>
+        {`${item.applications?.length ?? 0} applicant(s)`}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -41,7 +86,7 @@ export default function GiveJobScreen({ navigation }) {
       <FlatList
         data={jobs}
         renderItem={renderJob}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={<Text style={styles.empty}>No jobs posted yet</Text>}
       />
