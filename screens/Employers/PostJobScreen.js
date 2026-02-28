@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import API from "../../services/api";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const JOB_CATEGORIES = [
   "Construction",
@@ -70,11 +72,15 @@ export default function PostJobScreen({ navigation }) {
 
   // ⭐ Post handler (API ready)
   const handlePost = async () => {
-    if (!title || !category || !amount || !address || !duration) {
+    console.log("callingssss")
+    console.log(title,category,amount,address,durationValue)
+    if (!title || !category || !amount || !address || !durationValue) {
       Alert.alert("Error", "Please fill required fields");
       return;
     }
+      const token = await AsyncStorage.getItem("userToken"); // ⭐ get token
 
+console.log("here")
     const payload = {
       title,
       category,
@@ -88,17 +94,47 @@ export default function PostJobScreen({ navigation }) {
         address,
         ...coords,
       },
-      expiresAt: expiry,
     };
-
+   console.log("plating")
     console.log("JOB PAYLOAD", payload);
+try {
+  const res = await API.post(
+    "/jobs/",
+    payload,
+    {
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
+  console.log(res.data);
+
+  Alert.alert("Success", "Job posted!", [
+    { text: "OK", onPress: () => navigation.goBack() },
+  ]);
+}
+  catch (error) {
+    console.log(error.response?.data || error.message);
+      console.log("FULL ERROR:", error);
+  console.log("RESPONSE:", error.response);
+  console.log("MESSAGE:", error.message);
+
+    Alert.alert(
+      "job craetion failed",
+      error.response?.data?.message || "Something went wrong"
+    );
+  }
     // TODO → call API later
 
-    Alert.alert("Success", "Job posted!", [
-      { text: "OK", onPress: () => navigation.goBack() },
-    ]);
+
+
   };
+
+
+
+
+
 
   return (
     <ScrollView style={styles.container}>
