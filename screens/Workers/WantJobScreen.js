@@ -21,10 +21,10 @@ export default function WantJobScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const getAllJobs = async () => {
+ const getAllJobs = async () => {
     try {
       setLoading(true);
-
+ 
       const token = await AsyncStorage.getItem("userToken");
 
       let params = {};

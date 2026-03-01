@@ -2,14 +2,34 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from "../../services/api";
-
+import * as Notifications from 'expo-notifications';
 export default function SignUpScreen({ navigation, route }) {
   const { userType } = route.params;
  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+const registerForPushNotifications = async () => {
+  try {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      console.log("Permission not granted");
+      return;
+    }
 
+    const tokenData = await Notifications.getDevicePushTokenAsync();
+    const fcmToken = tokenData.data;
+
+    console.log("FCM TOKEN:", fcmToken);
+
+    await API.post("/employer/save-token", {
+      token: fcmToken,
+    });
+
+  } catch (err) {
+    console.log("Push registration error:", err);
+  }
+};
 
 const handleSignUp = async () => {
   if (!email ||  !password || !confirmPassword) {
@@ -37,7 +57,9 @@ const handleSignUp = async () => {
     await AsyncStorage.setItem("userToken", token);
     await AsyncStorage.setItem("userType", user.role);
     await AsyncStorage.setItem("userId",user._id)
-
+ if (user.role === "employer") {
+  await registerForPushNotifications();
+}
     Alert.alert("Success", "Account created successfully!", [
       {
         text: "OK",

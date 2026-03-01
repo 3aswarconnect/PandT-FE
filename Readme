@@ -1,0 +1,10 @@
+firebase-- e6281937589@gmail.com sso
+eas login - e6281937589@gmail.com or 3aswar,IndianaJones@1
+mongodb- eswar.connect@gmail.com,IndianaJones@1
+
+github -- 3aswarconnect ,IndinaJones@1
+
+
+for development real time app
+eas build -p android --profile development
+npx expo start --dev-client

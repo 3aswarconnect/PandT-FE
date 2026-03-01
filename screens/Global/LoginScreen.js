@@ -2,11 +2,39 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from "../../services/api";
+import * as Notifications from 'expo-notifications';
 export default function LoginScreen({ navigation, route }) {
   const { userType } = route.params;
   const [password, setPassword] = useState('');
   const [email,setEmail]= useState("");
 
+  const registerForPushNotifications = async () => {
+  try {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      console.log("Permission not granted");
+      return;
+    }
+
+    const tokenData = await Notifications.getDevicePushTokenAsync();
+    const fcmToken = tokenData.data;
+    const token = await AsyncStorage.getItem("userToken");
+    
+    console.log("FCM TOKEN:", fcmToken);
+
+    await API.post("/employer/save-token", {
+      token: fcmToken,
+    },
+   {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+  } catch (err) {
+    console.log("Push registration error:", err);
+  }
+};
 const handleLogin = async () => {
   console.log("calling")
   if (!email || !password) {
@@ -29,7 +57,10 @@ const handleLogin = async () => {
     await AsyncStorage.setItem("userToken", token);
     await AsyncStorage.setItem("userType", user.role);
     await AsyncStorage.setItem("userId",user._id)
-
+// 🔥 REGISTER FCM ONLY FOR EMPLOYER
+if (user.role === "employer") {
+  await registerForPushNotifications();
+}
     Alert.alert("Success", "Login successfully!", [
       {
         text: "OK",
