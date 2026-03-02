@@ -11,11 +11,48 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../../services/api";
 
-export default function JobStatusScreen({ route }) {
-  const { job, isOwner } = route.params;
+export default function JobStatusScreen({ route, navigation }) 
+{  const { job, isOwner } = route.params;
   console.log("job stats",job)
   const [applications, setApplications] = useState(job.applications || []);
   const [loadingId, setLoadingId] = useState(null);
+
+
+  const handleDeleteJob = async () => {
+  try {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this job?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const token = await AsyncStorage.getItem("userToken");
+
+            await API.delete(`/jobs/${job._id}`, {
+              headers: {
+                authorization: `Bearer ${token}`,
+              },
+            });
+
+
+            // 👇 Go back after delete
+ setTimeout(() => {
+              navigation.goBack();
+            }, 500);
+          },
+        },
+      ]
+    );
+  } catch (error) {
+    Alert.alert(
+      "Error",
+      error.response?.data?.message || "Something went wrong"
+    );
+  }
+};
   // ✅ Approve / Reject Handler
   const handleAction = async (applicationId, action) => {
     try {
@@ -97,6 +134,14 @@ export default function JobStatusScreen({ route }) {
         <Text style={styles.sectionText}>
           {job.description || "No description provided"}
         </Text>
+        {isOwner && (
+  <TouchableOpacity
+    style={styles.deleteBtn}
+    onPress={handleDeleteJob}
+  >
+    <Text style={styles.deleteBtnText}>Delete Job</Text>
+  </TouchableOpacity>
+)}
       </View>
 
       {/* ================= APPLICANTS ================= */}
@@ -310,4 +355,16 @@ const styles = StyleSheet.create({
     color: "#F44336",
     fontWeight: "600",
   },
+  deleteBtn: {
+  marginTop: 20,
+  backgroundColor: "#000",
+  paddingVertical: 12,
+  borderRadius: 10,
+  alignItems: "center",
+},
+
+deleteBtnText: {
+  color: "#fff",
+  fontWeight: "600",
+},
 });

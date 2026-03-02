@@ -36,7 +36,6 @@ export default function LoginScreen({ navigation, route }) {
   }
 };
 const handleLogin = async () => {
-  console.log("calling")
   if (!email || !password) {
     Alert.alert("Error", "Please fill all required fields");
     return;
@@ -61,18 +60,11 @@ const handleLogin = async () => {
 if (user.role === "employer") {
   await registerForPushNotifications();
 }
-    Alert.alert("Success", "Login successfully!", [
-      {
-        text: "OK",
-        onPress: () => {
-          if (user.role === "employer") {
+ if (user.role === "employer") {
             navigation.replace("GiveJob");
           } else {
             navigation.replace("WantJob");
           }
-        },
-      },
-    ]);
   } catch (error) {
     console.log(error.response?.data || error.message);
       console.log("FULL ERROR:", error);
