@@ -15,42 +15,62 @@ export default function ProfileScreen({ navigation }) {
   const [photo, setPhoto] = useState(null);
   const [location, setLocation] = useState("");
 
-  const pickImage = async () => {
+const pickImage = async () => {
+  try {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert("Permission required", "Camera permission is needed");
+      return;
+    }
+
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.5,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // ✅ THIS
+      allowsEditing: true,
+      quality: 0.7,
     });
 
     if (!result.canceled) {
-      setPhoto(result.assets[0].uri);
+      setPhoto(result.assets[0]);
     }
-  };
+  } catch (err) {
+    console.log("Camera Error:", err);
+  }
+};
 
-  const handleSubmit = async () => {
-    try {
-      const token = await AsyncStorage.getItem("userToken");
+const handleSubmit = async () => {
+  try {
+    const token = await AsyncStorage.getItem("userToken");
 
-      await API.put(
-        "/employer/complete-profile",
-        {
-          name,
-          phone,
-          age: Number(age),
-          photo,
-          location: { address: location },
-        },
-        {
-          headers: { authorization: `Bearer ${token}` },
-        }
-      );
+    const formData = new FormData();
 
-      Alert.alert("Success", "Profile Completed");
-      navigation.replace("PostJob");
+    formData.append("name", name);
+    formData.append("phone", phone);
+    formData.append("age", age);
+    formData.append("location", location);
 
-    } catch (error) {
-      Alert.alert("Error", error.response?.data?.message);
-    }
-  };
+if (photo) {
+  formData.append("photo", {
+    uri: photo.uri,
+    name: photo.fileName || "profile.jpg",
+    type: photo.type === "image" ? "image/jpeg" : "image/jpeg",
+  });
+}   console.log(formData)
+ await API.put("/auth/employer/complete-profile", formData, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "multipart/form-data",
+  },
+});
+    
+    Alert.alert("Success", "Profile Completed");
+    navigation.replace("PostJob");
+
+  } catch (error) {
+  console.log("UPLOAD ERROR:", error.response?.data || error.message);
+  Alert.alert("Error", error.response?.data?.message || "Upload failed");
+}
+};
 
 return (
   <View style={styles.container}>
