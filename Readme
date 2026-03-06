@@ -3,3 +3,7 @@ note:
 when creating build :make sure the google-services.json is not on gitignore(since eas track git files only)
 
 when failed to connect to app -- reastart the pc or change the ip from wifi
+
+
+
+employer:

@@ -60,11 +60,20 @@ export default function SignUpScreen({ navigation, route }) {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== 'granted') return;
+            const token = await AsyncStorage.getItem("userToken");
 
       const tokenData = await Notifications.getDevicePushTokenAsync();
       const fcmToken = tokenData.data;
 
-      await API.post("/employer/save-token", { token: fcmToken });
+          await API.post(
+      `/${userType}/save-token`,
+      { token: fcmToken },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     } catch (err) {
       console.log("Push registration error:", err);
     }
@@ -100,9 +109,8 @@ export default function SignUpScreen({ navigation, route }) {
       await AsyncStorage.setItem("userType", user.role);
       await AsyncStorage.setItem("userId", user._id);
 
-      if (user.role === "employer") {
-        await registerForPushNotifications();
-      }
+      await registerForPushNotifications();
+
 
       Alert.alert("Success", "Account created successfully!", [
         {
