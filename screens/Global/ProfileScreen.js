@@ -7,14 +7,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../../services/api";
 import { StyleSheet } from "react-native";
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen({ navigation,route }) {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null);
   const [location, setLocation] = useState("");
-
 const pickImage = async () => {
   try {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();

@@ -21,10 +21,10 @@ export default function WantJobScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
 
- const getAllJobs = async () => {
+  const getAllJobs = async () => {
     try {
       setLoading(true);
- 
+
       const token = await AsyncStorage.getItem("userToken");
 
       let params = {};
@@ -121,6 +121,13 @@ export default function WantJobScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Jobs List</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Settings", { userType: 'worker' })}>
+
+          <Text style={styles.menuIcon}>☰</Text>
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={styles.searchBar}
         placeholder="🔍 Search by title, category, location..."
@@ -292,5 +299,25 @@ const styles = StyleSheet.create({
     color: "#999",
     marginTop: 40,
     fontSize: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 16,
+    backgroundColor: "#FF5722",
+  },
+
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+
+  menuIcon: {
+    fontSize: 26,
+    color: "#fff",
   },
 });

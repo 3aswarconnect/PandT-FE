@@ -10,25 +10,22 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function SettingsScreen({ navigation,route }) {
-   const {userType} =route.params;
-   console.log(userType)
+export default function SettingsScreen({ navigation, route }) {
+  const { userType } = route.params;
+  console.log(userType);
+
   const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            await AsyncStorage.removeItem("userToken");
-            navigation.replace("Login",{userType:"employer"}); // redirect to login
-          },
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem("userToken");
+          navigation.replace("Login", { userType: "employer" });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const SettingItem = ({ icon, title, onPress, color }) => (
@@ -43,7 +40,6 @@ export default function SettingsScreen({ navigation,route }) {
 
   return (
     <View style={styles.container}>
-
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Settings</Text>
@@ -56,6 +52,15 @@ export default function SettingsScreen({ navigation,route }) {
           title="Update Profile"
           onPress={() => navigation.navigate("ProfileScreen")}
         />
+
+        {/* My Jobs - visible only for workers */}
+        {userType === "worker" && (
+          <SettingItem
+            icon="briefcase-outline"
+            title="My Jobs"
+            onPress={() => navigation.navigate("MyJobs")}
+          />
+        )}
 
         <SettingItem
           icon="shield-checkmark-outline"
@@ -82,7 +87,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
-
   header: {
     paddingTop: 50,
     paddingBottom: 20,
@@ -90,17 +94,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     elevation: 4,
   },
-
   headerTitle: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#333",
   },
-
   content: {
     padding: 16,
   },
-
   item: {
     backgroundColor: "#fff",
     paddingVertical: 16,
@@ -112,19 +113,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 2,
   },
-
   left: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-
   itemText: {
     fontSize: 16,
     fontWeight: "500",
     color: "#333",
   },
-
   divider: {
     height: 1,
     backgroundColor: "#ddd",

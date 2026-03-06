@@ -22,15 +22,15 @@ export default function LoginScreen({ navigation, route }) {
     
     console.log("FCM TOKEN:", fcmToken);
 
-    await API.post("/employer/save-token", {
-      token: fcmToken,
-    },
-   {
+    await API.post(
+      `/${userType}/save-token`,
+      { token: fcmToken },
+      {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-
+      }
+    );
   } catch (err) {
     console.log("Push registration error:", err);
   }
