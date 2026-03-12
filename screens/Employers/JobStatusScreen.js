@@ -39,7 +39,20 @@ export default function JobStatusScreen({ route, navigation }) {
       Alert.alert("Error", error.response?.data?.message || "Something went wrong");
     }
   };
+const decreaseAmount = async (app) => {
 
+const newAmount = app.proposedAmount - 100;
+
+const token = await AsyncStorage.getItem("userToken");
+
+await API.put(`/jobs/${job._id}/decrease-offer`,{
+ applicationId: app._id,
+ amount:newAmount
+},{
+ headers:{authorization:`Bearer ${token}`}
+});
+
+};
   const handleAction = async (applicationId, action) => {
     try {
       setLoadingId(applicationId);
@@ -152,31 +165,43 @@ export default function JobStatusScreen({ route, navigation }) {
               <View>
                 <Text style={styles.applicantName}>{app.worker?.name || "Worker"}</Text>
                 <Text style={styles.statusText}>Status: {app.status}</Text>
+                <Text style={{marginTop:4}}>
+Proposed: ₹{app.proposedAmount || job.amount}
+</Text>
               </View>
 
-              {app.status === "pending" && !isJobLocked && (
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <TouchableOpacity
-                    style={styles.approveBtn}
-                    onPress={() => handleAction(app._id, "accepted")}
-                    disabled={loadingId === app._id}
-                  >
-                    {loadingId === app._id ? (
-                      <ActivityIndicator color="#fff" size="small" />
-                    ) : (
-                      <Text style={styles.approveBtnText}>Approve</Text>
-                    )}
-                  </TouchableOpacity>
+             {app.status === "pending" && !isJobLocked && (
+  <View style={{ flexDirection: "row", alignItems: "center" }}>
 
-                  <TouchableOpacity
-                    style={styles.rejectBtn}
-                    onPress={() => handleAction(app._id, "rejected")}
-                    disabled={loadingId === app._id}
-                  >
-                    <Text style={styles.rejectBtnText}>Reject</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+    <TouchableOpacity
+      style={styles.minusBtn}
+      onPress={() => decreaseAmount(app)}
+    >
+      <Text style={{ color: "#dacaca", fontSize: 18 }}>-</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.approveBtn}
+      onPress={() => handleAction(app._id, "accepted")}
+      disabled={loadingId === app._id}
+    >
+      {loadingId === app._id ? (
+        <ActivityIndicator color="#fff" size="small" />
+      ) : (
+        <Text style={styles.approveBtnText}>Approve</Text>
+      )}
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.rejectBtn}
+      onPress={() => handleAction(app._id, "rejected")}
+      disabled={loadingId === app._id}
+    >
+      <Text style={styles.rejectBtnText}>Reject</Text>
+    </TouchableOpacity>
+
+  </View>
+)}
 
               {app.status === "accepted" && (
                 <View style={styles.acceptedBadge}>
@@ -191,6 +216,7 @@ export default function JobStatusScreen({ route, navigation }) {
               )}
             </View>
           ))}
+        
         </View>
       )}
 
@@ -293,4 +319,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   trackBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  minusBtn: {
+  backgroundColor: "#FF9800",
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  justifyContent: "center",
+  alignItems: "center",
+  marginRight: 10
+},
+  
 });

@@ -17,6 +17,7 @@ export default function JobDetailScreen({ navigation, route }) {
   const [applied, setApplied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState(null); // pending | accepted | rejected
+  const [proposedAmount, setProposedAmount] = useState(job.amount);
 
   useEffect(() => {
     const checkIfApplied = async () => {
@@ -41,6 +42,19 @@ export default function JobDetailScreen({ navigation, route }) {
     checkIfApplied();
   }, [job]);
 
+  const increaseAmount = async () => {
+  const newAmount = proposedAmount + 50;
+
+  setProposedAmount(newAmount);
+
+  const token = await AsyncStorage.getItem("userToken");
+
+  await API.put(`/jobs/${job._id}/increase-offer`,{
+    amount:newAmount
+  },{
+    headers:{authorization:`Bearer ${token}`}
+  });
+};
   const checkprofilestatus = async () => {
     console.log("calling")
     const token = await AsyncStorage.getItem("userToken");
@@ -148,6 +162,22 @@ if (!profileComplete) {
           </Text>
         </View>
       )}
+      {applied && applicationStatus === "pending" && (
+<View style={styles.bargainBox}>
+
+<Text style={{fontSize:16}}>
+Proposed Amount: ₹{proposedAmount}
+</Text>
+
+<TouchableOpacity
+style={styles.plusBtn}
+onPress={increaseAmount}
+>
+<Text style={{color:"#fff",fontSize:18}}>+ Ask More</Text>
+</TouchableOpacity>
+
+</View>
+)}
 
       {/* ✅ Rejected status */}
       {!isOwner && applied && applicationStatus === "rejected" && (
