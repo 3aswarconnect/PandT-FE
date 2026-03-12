@@ -50,7 +50,7 @@ export default function SettingsScreen({ navigation, route }) {
         <SettingItem
           icon="person-outline"
           title="Update Profile"
-          onPress={() => navigation.navigate("ProfileScreen")}
+          onPress={() => navigation.navigate("ProfileScreen",{userType:userType})}
         />
 
         {/* My Jobs - visible only for workers */}

@@ -33,7 +33,7 @@ export default function GiveJobScreen({ navigation }) {
     });
 
     if (!res.data.profileCompleted) {
-      navigation.navigate("ProfileScreen");
+      navigation.navigate("ProfileScreen",{userType:"employer"});
     } else {
       navigation.navigate("PostJob");
     }

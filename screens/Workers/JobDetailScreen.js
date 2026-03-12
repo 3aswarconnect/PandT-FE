@@ -41,7 +41,30 @@ export default function JobDetailScreen({ navigation, route }) {
     checkIfApplied();
   }, [job]);
 
+  const checkprofilestatus = async () => {
+    console.log("calling")
+    const token = await AsyncStorage.getItem("userToken");
+
+    const res = await API.get("/auth/profile-status-worker", {
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    if (!res.data.profileCompleted) {
+      return false;
+    } else {
+      return true
+    }
+  };
   const handleApply = async () => {
+const profileComplete = await checkprofilestatus();
+
+if (!profileComplete) {
+  navigation.navigate("ProfileScreen",{userType:"worker"});
+  return;
+}
+
+
+
     Alert.alert("Apply for Job", "Are you sure you want to apply?", [
       { text: "Cancel" },
       {

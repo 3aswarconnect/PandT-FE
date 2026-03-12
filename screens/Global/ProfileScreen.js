@@ -8,7 +8,7 @@ import API from "../../services/api";
 import { StyleSheet } from "react-native";
 
 export default function ProfileScreen({ navigation,route }) {
-
+  const {userType}=route.params;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
@@ -55,7 +55,7 @@ if (photo) {
     type: photo.type === "image" ? "image/jpeg" : "image/jpeg",
   });
 }   console.log(formData)
- await API.put("/auth/employer/complete-profile", formData, {
+   await API.put(`/auth/${userType}/complete-profile`, formData, {
   headers: {
     Authorization: `Bearer ${token}`,
     "Content-Type": "multipart/form-data",
@@ -63,7 +63,6 @@ if (photo) {
 });
     
     Alert.alert("Success", "Profile Completed");
-    navigation.replace("PostJob");
 
   } catch (error) {
   console.log("UPLOAD ERROR:", error.response?.data || error.message);

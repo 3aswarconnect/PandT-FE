@@ -18,6 +18,8 @@ export default function EmployerJobSocketScreen({ route, navigation }) {
   const [otpInput, setOtpInput] = useState("");
   const [progress, setProgress] = useState(0);
   const [verifying, setVerifying] = useState(false);
+  const [rating, setRating] = useState(0);
+const [comment, setComment] = useState("");
 
   useEffect(() => {
     fetchJob();
@@ -38,7 +40,7 @@ export default function EmployerJobSocketScreen({ route, navigation }) {
         headers: { authorization: `Bearer ${token}` },
       });
       setJob(res.data);
-      console.log("eswar",res)
+      console.log("eswar", res)
     } catch (err) {
       Alert.alert("Error", "Could not load job details.");
     }
@@ -81,7 +83,6 @@ export default function EmployerJobSocketScreen({ route, navigation }) {
               headers: { authorization: `Bearer ${token}` },
             });
             Alert.alert("🎉 Job Completed!");
-            navigation.navigate("ReviewScreen", { jobId });
           } catch (err) {
             Alert.alert("Error", err.response?.data?.message || "Something went wrong.");
           }
@@ -89,15 +90,37 @@ export default function EmployerJobSocketScreen({ route, navigation }) {
       },
     ]);
   };
+const submitRating = async () => {
 
+ const token = await AsyncStorage.getItem("userToken");
+
+ await API.post(
+  `/jobs/${jobId}/review`,
+  { rating },
+  { headers:{authorization:`Bearer ${token}`} }
+ );
+
+};
+const submitComment = async () => {
+
+ const token = await AsyncStorage.getItem("userToken");
+
+ await API.post(
+  `/jobs/${jobId}/comment`,
+  { comment },
+  { headers:{authorization:`Bearer ${token}`} }
+ );
+
+ Alert.alert("Review submitted");
+};
   const calculateProgress = () => {
     if (!job?.jobStartedAt) return;
     const totalMs =
       job.duration.unit === "minutes"
         ? job.duration.value * 60 * 1000
         : job.duration.unit === "hours"
-        ? job.duration.value * 60 * 60 * 1000
-        : job.duration.value * 24 * 60 * 60 * 1000;
+          ? job.duration.value * 60 * 60 * 1000
+          : job.duration.value * 24 * 60 * 60 * 1000;
 
     const elapsed = Date.now() - new Date(job.jobStartedAt).getTime();
     setProgress(Math.min((elapsed / totalMs) * 100, 100));
@@ -157,6 +180,7 @@ export default function EmployerJobSocketScreen({ route, navigation }) {
 
       {/* ✅ STEP 2: Job in progress */}
       {job.otp?.verified && !job.jobCompletedAt && (
+        
         <View style={styles.section}>
           <View style={styles.inProgressCard}>
             <Text style={styles.inProgressTitle}>🟢 Job In Progress</Text>
@@ -181,7 +205,44 @@ export default function EmployerJobSocketScreen({ route, navigation }) {
           <Text style={styles.completedText}>✅ Job Completed Successfully!</Text>
         </View>
       )}
+      
+      {/* step 4 for comment and reviews */}
+    {job.jobCompletedAt && (
+  <View style={styles.reviewSection}>
 
+    <Text style={styles.reviewTitle}>Rate Worker</Text>
+
+    <View style={styles.starRow}>
+      {[1,2,3,4,5].map(star => (
+        <TouchableOpacity key={star} onPress={()=>setRating(star)}>
+          <Text style={styles.star}>
+            {star <= rating ? "⭐" : "☆"}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+
+    <TextInput
+      placeholder="Write comment (optional)"
+      value={comment}
+      onChangeText={setComment}
+      style={styles.commentInput}
+      multiline
+    />
+
+    <TouchableOpacity
+      style={styles.submitReviewBtn}
+      onPress={async () => {
+        await submitRating();
+        await submitComment();
+      }}
+    >
+      <Text style={styles.submitReviewText}>Submit</Text>
+      <Text style={styles.arrowIcon}>➜</Text>
+    </TouchableOpacity>
+
+  </View>
+)}
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -276,4 +337,60 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   completedText: { fontSize: 18, fontWeight: "700", color: "#2E7D32" },
+  reviewSection: {
+  marginTop: 20,
+  backgroundColor: "#fff",
+  padding: 16,
+  borderRadius: 14,
+},
+
+reviewTitle: {
+  fontSize: 18,
+  fontWeight: "700",
+  color: "#333",
+  marginBottom: 10,
+},
+
+starRow: {
+  flexDirection: "row",
+  justifyContent: "center",
+  marginVertical: 10,
+},
+
+star: {
+  fontSize: 34,
+  marginHorizontal: 6,
+},
+
+commentInput: {
+  borderWidth: 1,
+  borderColor: "#ddd",
+  borderRadius: 12,
+  padding: 12,
+  marginTop: 10,
+  backgroundColor: "#fafafa",
+  minHeight: 60,
+},
+
+submitReviewBtn: {
+  marginTop: 12,
+  backgroundColor: "#1976D2",
+  paddingVertical: 12,
+  borderRadius: 12,
+  alignItems: "center",
+  flexDirection: "row",
+  justifyContent: "center",
+},
+
+submitReviewText: {
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: "700",
+},
+
+arrowIcon: {
+  fontSize: 18,
+  marginLeft: 6,
+  color: "#fff",
+},
 });
