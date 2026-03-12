@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../../services/api";
 
@@ -50,12 +50,24 @@ export default function WorkerJobSocketScreen({ route }) {
     }
     return () => clearInterval(interval);
   }, [job?.jobStartedAt, job?.jobCompletedAt]);
+const callEmployer = () => {
+  if (!employer?.phone) return;
+  Linking.openURL(`tel:${employer.phone}`);
+};
+const openLocation = () => {
+  if (!job?.location?.address) return;
 
+  const address = encodeURIComponent(job.location.address);
+  const url = `https://www.google.com/maps/search/?api=1&query=${address}`;
+
+  Linking.openURL(url);
+};
   if (!job) return (
     <View style={styles.center}>
       <Text style={styles.loadingText}>Loading job...</Text>
     </View>
   );
+  const employer = job.employer;
 
   const step = job.jobCompletedAt ? 3 : job.otp?.verified ? 2 : 1;
 
@@ -64,7 +76,53 @@ export default function WorkerJobSocketScreen({ route }) {
 
       {/* Header */}
       <Text style={styles.title}>{job.title}</Text>
-      <Text style={styles.subtitle}>📍 {job.location?.address}</Text>
+<View style={styles.locationRow}>
+
+  <View style={{flex:1}}>
+    <Text style={styles.locationLabel}>📍 Location</Text>
+    <Text style={styles.locationText}>{job.location?.address}</Text>
+  </View>
+
+  <TouchableOpacity style={styles.navigateBtn} onPress={openLocation}>
+    <Text style={styles.navigateIcon}>🧭</Text>
+    <Text style={styles.navigateText}>Navigate</Text>
+  </TouchableOpacity>
+
+</View>
+      {employer && (
+  <View style={styles.employerCard}>
+
+    <Text style={styles.employerTitle}>🏢 Employer Details</Text>
+
+    {employer.photo && (
+      <Image
+        source={{ uri: employer.photo }}
+        style={styles.employerPhoto}
+      />
+    )}
+
+    <View style={styles.employerRow}>
+      <Text style={styles.employerLabel}>Name</Text>
+      <Text style={styles.employerValue}>{employer.name}</Text>
+    </View>
+<View style={styles.employerRow}>
+  <Text style={styles.employerLabel}>Phone</Text>
+
+  <View style={styles.phoneRow}>
+    <Text style={styles.employerValue}>{employer.phone}</Text>
+
+    <TouchableOpacity style={styles.callBtn} onPress={callEmployer}>
+      <Text style={styles.callIcon}>📞</Text>
+    </TouchableOpacity>
+  </View>
+</View>
+        <View style={styles.employerRow}>
+      <Text style={styles.employerLabel}>Age</Text>
+      <Text style={styles.employerValue}>{employer.age}</Text>
+    </View>
+
+  </View>
+)}
 
       {/* Step indicator */}
       <View style={styles.stepRow}>
@@ -184,7 +242,44 @@ const styles = StyleSheet.create({
   instructionRow:   { flexDirection: "row", alignItems: "flex-start", marginBottom: 10, gap: 8 },
   instructionIcon:  { fontSize: 18 },
   instructionText:  { fontSize: 14, color: "#555", flex: 1, lineHeight: 20 },
+locationRow:{
+  flexDirection:"row",
+  alignItems:"center",
+  justifyContent:"space-between",
+  marginBottom:20
+},
 
+locationLabel:{
+  fontSize:13,
+  color:"#888"
+},
+
+locationText:{
+  fontSize:14,
+  fontWeight:"600",
+  color:"#333"
+},
+
+navigateBtn:{
+  flexDirection:"row",
+  alignItems:"center",
+  backgroundColor:"#6366F1",
+  paddingVertical:6,
+  paddingHorizontal:10,
+  borderRadius:10
+},
+
+navigateIcon:{
+  fontSize:14,
+  marginRight:4,
+  color:"#fff"
+},
+
+navigateText:{
+  color:"#fff",
+  fontWeight:"600",
+  fontSize:13
+},
   // OTP
   otpCard: {
     backgroundColor: "#fff", borderRadius: 16, padding: 24,
@@ -220,4 +315,60 @@ const styles = StyleSheet.create({
   completedEmoji:   { fontSize: 56 },
   completedText:    { fontSize: 24, fontWeight: "800", color: "#2E7D32", marginTop: 8 },
   completedSub:     { fontSize: 14, color: "#555", marginTop: 6, textAlign: "center" },
+  employerCard: {
+  backgroundColor: "#fff",
+  borderRadius: 14,
+  padding: 16,
+  marginBottom: 20,
+  borderLeftWidth: 4,
+  borderLeftColor: "#6366F1",
+},
+
+employerTitle: {
+  fontSize: 16,
+  fontWeight: "700",
+  marginBottom: 10,
+  color: "#333",
+},
+
+employerPhoto: {
+  width: 70,
+  height: 70,
+  borderRadius: 35,
+  alignSelf: "center",
+  marginBottom: 10,
+},
+
+employerRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginBottom: 6,
+},
+
+employerLabel: {
+  fontSize: 14,
+  color: "#777",
+},
+
+employerValue: {
+  fontSize: 14,
+  fontWeight: "600",
+  color: "#333",
+},
+phoneRow:{
+  flexDirection:"row",
+  alignItems:"center",
+  gap:10
+},
+
+callBtn:{
+  backgroundColor:"#4CAF50",
+  padding:6,
+  borderRadius:8
+},
+
+callIcon:{
+  fontSize:16,
+  color:"#fff"
+}
 });

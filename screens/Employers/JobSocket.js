@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../../services/api";
+import { Image } from "react-native";
 
 export default function EmployerJobSocketScreen({ route, navigation }) {
   const { jobId } = route.params;
@@ -40,7 +41,6 @@ const [comment, setComment] = useState("");
         headers: { authorization: `Bearer ${token}` },
       });
       setJob(res.data);
-      console.log("eswar", res)
     } catch (err) {
       Alert.alert("Error", "Could not load job details.");
     }
@@ -127,12 +127,42 @@ const submitComment = async () => {
   };
 
   if (!job) return null;
+  const acceptedApplication = job.applications?.find(
+  (app) => app.status === "accepted"
+);
+
+const worker = acceptedApplication?.worker;
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{job.title}</Text>
       <Text style={styles.subtitle}>📍 {job.location?.address}</Text>
+{worker && (
+  <View style={styles.workerCard}>
+    <Image
+  source={{ uri: worker.photo }}
+  style={styles.workerPhoto}
+/>
+    
+    <Text style={styles.workerTitle}>👷 Assigned Worker</Text>
 
+    <View style={styles.workerRow}>
+      <Text style={styles.workerLabel}>Name:</Text>
+      <Text style={styles.workerValue}>{worker.name}</Text>
+    </View>
+
+    <View style={styles.workerRow}>
+      <Text style={styles.workerLabel}>Phone:</Text>
+      <Text style={styles.workerValue}>{worker.phone}</Text>
+    </View>
+
+    <View style={styles.workerRow}>
+      <Text style={styles.workerLabel}>Age:</Text>
+      <Text style={styles.workerValue}>{worker.age}</Text>
+    </View>
+
+  </View>
+)}
       {/* ✅ STEP 1: OTP Verification - Worker not yet verified */}
       {!job.otp?.verified && (
         <View style={styles.section}>
@@ -393,4 +423,42 @@ arrowIcon: {
   marginLeft: 6,
   color: "#fff",
 },
+workerCard: {
+  backgroundColor: "#fff",
+  padding: 16,
+  borderRadius: 14,
+  marginBottom: 12,
+  borderLeftWidth: 4,
+  borderLeftColor: "#1976D2",
+},
+
+workerTitle: {
+  fontSize: 16,
+  fontWeight: "700",
+  marginBottom: 10,
+  color: "#333",
+},
+
+workerRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginBottom: 6,
+},
+
+workerLabel: {
+  fontSize: 14,
+  color: "#666",
+},
+
+workerValue: {
+  fontSize: 14,
+  fontWeight: "600",
+  color: "#333",
+},
+workerPhoto:{
+  width:70,
+  height:70,
+  borderRadius:35,
+  marginBottom:10
+}
 });
