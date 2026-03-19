@@ -61,6 +61,13 @@ export default function SettingsScreen({ navigation, route }) {
             onPress={() => navigation.navigate("MyJobs")}
           />
         )}
+        {userType === "worker" && (
+  <SettingItem
+    icon="person-circle-outline"
+    title="My Profile"
+    onPress={() => navigation.navigate("WorkerProfile")}
+  />
+)}
 
         <SettingItem
           icon="shield-checkmark-outline"

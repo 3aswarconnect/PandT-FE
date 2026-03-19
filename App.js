@@ -14,6 +14,7 @@ import SettingsScreen from './screens/Global/SettingsScreen';
 import EditJobScreen from './screens/Employers/EditJobScreen';
 import EmployerJobSocketScreen from './screens/Employers/JobSocket';
 import WorkerJobSocketScreen from './screens/Workers/JobSocket'
+import BioScreen from './screens/Workers/BioScreen'
 import React, { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import { NavigationContainer } from '@react-navigation/native';
@@ -83,6 +84,7 @@ export default function App() {
         <Stack.Screen name="MyJobs" component={MyJobsScreen} options={{ title: 'My Jobs' }} />
         <Stack.Screen name="Payment" component={PaymentScreen} options={{ title: 'Payment' }} />
          <Stack.Screen name="WorkersJobSocket" component={WorkerJobSocketScreen} />
+         <Stack.Screen name="WorkerProfile" component={BioScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
