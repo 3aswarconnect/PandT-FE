@@ -20,7 +20,7 @@ export default function EmployerJobSocketScreen({ route, navigation }) {
   const [progress, setProgress] = useState(0);
   const [verifying, setVerifying] = useState(false);
   const [rating, setRating] = useState(0);
-const [comment, setComment] = useState("");
+  const [comment, setComment] = useState("");
 
   useEffect(() => {
     fetchJob();
@@ -33,7 +33,35 @@ const [comment, setComment] = useState("");
     }
     return () => clearInterval(interval);
   }, [job]);
+  const cancelWorker = async () => {
+    Alert.alert(
+      "Cancel Worker",
+      "Are you sure you want to cancel this worker?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem("userToken");
 
+              await API.put(
+                `/jobs/${jobId}/cancel-worker`,
+                {},
+                { headers: { authorization: `Bearer ${token}` } }
+              );
+
+              Alert.alert("Cancelled", "Worker removed. Job is open again.");
+              fetchJob(); // refresh UI
+            } catch (err) {
+              Alert.alert("Error", "Something went wrong");
+            }
+          },
+        },
+      ]
+    );
+  };
   const fetchJob = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
@@ -90,29 +118,29 @@ const [comment, setComment] = useState("");
       },
     ]);
   };
-const submitRating = async () => {
+  const submitRating = async () => {
 
- const token = await AsyncStorage.getItem("userToken");
+    const token = await AsyncStorage.getItem("userToken");
 
- await API.post(
-  `/jobs/${jobId}/review`,
-  { rating },
-  { headers:{authorization:`Bearer ${token}`} }
- );
+    await API.post(
+      `/jobs/${jobId}/review`,
+      { rating },
+      { headers: { authorization: `Bearer ${token}` } }
+    );
 
-};
-const submitComment = async () => {
+  };
+  const submitComment = async () => {
 
- const token = await AsyncStorage.getItem("userToken");
+    const token = await AsyncStorage.getItem("userToken");
 
- await API.post(
-  `/jobs/${jobId}/comment`,
-  { comment },
-  { headers:{authorization:`Bearer ${token}`} }
- );
+    await API.post(
+      `/jobs/${jobId}/comment`,
+      { comment },
+      { headers: { authorization: `Bearer ${token}` } }
+    );
 
- Alert.alert("Review submitted");
-};
+    Alert.alert("Review submitted");
+  };
   const calculateProgress = () => {
     if (!job?.jobStartedAt) return;
     const totalMs =
@@ -128,41 +156,41 @@ const submitComment = async () => {
 
   if (!job) return null;
   const acceptedApplication = job.applications?.find(
-  (app) => app.status === "accepted"
-);
+    (app) => app.status === "accepted"
+  );
 
-const worker = acceptedApplication?.worker;
+  const worker = acceptedApplication?.worker;
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{job.title}</Text>
       <Text style={styles.subtitle}>📍 {job.location?.address}</Text>
-{worker && (
-  <View style={styles.workerCard}>
-    <Image
-  source={{ uri: worker.photo }}
-  style={styles.workerPhoto}
-/>
-    
-    <Text style={styles.workerTitle}>👷 Assigned Worker</Text>
+      {worker && (
+        <View style={styles.workerCard}>
+          <Image
+            source={{ uri: worker.photo }}
+            style={styles.workerPhoto}
+          />
 
-    <View style={styles.workerRow}>
-      <Text style={styles.workerLabel}>Name:</Text>
-      <Text style={styles.workerValue}>{worker.name}</Text>
-    </View>
+          <Text style={styles.workerTitle}>👷 Assigned Worker</Text>
 
-    <View style={styles.workerRow}>
-      <Text style={styles.workerLabel}>Phone:</Text>
-      <Text style={styles.workerValue}>{worker.phone}</Text>
-    </View>
+          <View style={styles.workerRow}>
+            <Text style={styles.workerLabel}>Name:</Text>
+            <Text style={styles.workerValue}>{worker.name}</Text>
+          </View>
 
-    <View style={styles.workerRow}>
-      <Text style={styles.workerLabel}>Age:</Text>
-      <Text style={styles.workerValue}>{worker.age}</Text>
-    </View>
+          <View style={styles.workerRow}>
+            <Text style={styles.workerLabel}>Phone:</Text>
+            <Text style={styles.workerValue}>{worker.phone}</Text>
+          </View>
 
-  </View>
-)}
+          <View style={styles.workerRow}>
+            <Text style={styles.workerLabel}>Age:</Text>
+            <Text style={styles.workerValue}>{worker.age}</Text>
+          </View>
+
+        </View>
+      )}
       {/* ✅ STEP 1: OTP Verification - Worker not yet verified */}
       {!job.otp?.verified && (
         <View style={styles.section}>
@@ -210,7 +238,7 @@ const worker = acceptedApplication?.worker;
 
       {/* ✅ STEP 2: Job in progress */}
       {job.otp?.verified && !job.jobCompletedAt && (
-        
+
         <View style={styles.section}>
           <View style={styles.inProgressCard}>
             <Text style={styles.inProgressTitle}>🟢 Job In Progress</Text>
@@ -228,6 +256,23 @@ const worker = acceptedApplication?.worker;
           </TouchableOpacity>
         </View>
       )}
+      {/* cancel */}
+      {!job.jobCompletedAt && (
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#F44336",
+            padding: 12,
+            borderRadius: 10,
+            marginTop: 12,
+            alignItems: "center",
+          }}
+          onPress={cancelWorker}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700" }}>
+            ❌ Cancel Worker
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* ✅ STEP 3: Completed */}
       {job.jobCompletedAt && (
@@ -235,44 +280,44 @@ const worker = acceptedApplication?.worker;
           <Text style={styles.completedText}>✅ Job Completed Successfully!</Text>
         </View>
       )}
-      
+
       {/* step 4 for comment and reviews */}
-    {job.jobCompletedAt && (
-  <View style={styles.reviewSection}>
+      {job.jobCompletedAt && (
+        <View style={styles.reviewSection}>
 
-    <Text style={styles.reviewTitle}>Rate Worker</Text>
+          <Text style={styles.reviewTitle}>Rate Worker</Text>
 
-    <View style={styles.starRow}>
-      {[1,2,3,4,5].map(star => (
-        <TouchableOpacity key={star} onPress={()=>setRating(star)}>
-          <Text style={styles.star}>
-            {star <= rating ? "⭐" : "☆"}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+          <View style={styles.starRow}>
+            {[1, 2, 3, 4, 5].map(star => (
+              <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                <Text style={styles.star}>
+                  {star <= rating ? "⭐" : "☆"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-    <TextInput
-      placeholder="Write comment (optional)"
-      value={comment}
-      onChangeText={setComment}
-      style={styles.commentInput}
-      multiline
-    />
+          <TextInput
+            placeholder="Write comment (optional)"
+            value={comment}
+            onChangeText={setComment}
+            style={styles.commentInput}
+            multiline
+          />
 
-    <TouchableOpacity
-      style={styles.submitReviewBtn}
-      onPress={async () => {
-        await submitRating();
-        await submitComment();
-      }}
-    >
-      <Text style={styles.submitReviewText}>Submit</Text>
-      <Text style={styles.arrowIcon}>➜</Text>
-    </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.submitReviewBtn}
+            onPress={async () => {
+              await submitRating();
+              await submitComment();
+            }}
+          >
+            <Text style={styles.submitReviewText}>Submit</Text>
+            <Text style={styles.arrowIcon}>➜</Text>
+          </TouchableOpacity>
 
-  </View>
-)}
+        </View>
+      )}
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -368,97 +413,97 @@ const styles = StyleSheet.create({
   },
   completedText: { fontSize: 18, fontWeight: "700", color: "#2E7D32" },
   reviewSection: {
-  marginTop: 20,
-  backgroundColor: "#fff",
-  padding: 16,
-  borderRadius: 14,
-},
+    marginTop: 20,
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 14,
+  },
 
-reviewTitle: {
-  fontSize: 18,
-  fontWeight: "700",
-  color: "#333",
-  marginBottom: 10,
-},
+  reviewTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 10,
+  },
 
-starRow: {
-  flexDirection: "row",
-  justifyContent: "center",
-  marginVertical: 10,
-},
+  starRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
 
-star: {
-  fontSize: 34,
-  marginHorizontal: 6,
-},
+  star: {
+    fontSize: 34,
+    marginHorizontal: 6,
+  },
 
-commentInput: {
-  borderWidth: 1,
-  borderColor: "#ddd",
-  borderRadius: 12,
-  padding: 12,
-  marginTop: 10,
-  backgroundColor: "#fafafa",
-  minHeight: 60,
-},
+  commentInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+    backgroundColor: "#fafafa",
+    minHeight: 60,
+  },
 
-submitReviewBtn: {
-  marginTop: 12,
-  backgroundColor: "#1976D2",
-  paddingVertical: 12,
-  borderRadius: 12,
-  alignItems: "center",
-  flexDirection: "row",
-  justifyContent: "center",
-},
+  submitReviewBtn: {
+    marginTop: 12,
+    backgroundColor: "#1976D2",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+  },
 
-submitReviewText: {
-  color: "#fff",
-  fontSize: 16,
-  fontWeight: "700",
-},
+  submitReviewText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
 
-arrowIcon: {
-  fontSize: 18,
-  marginLeft: 6,
-  color: "#fff",
-},
-workerCard: {
-  backgroundColor: "#fff",
-  padding: 16,
-  borderRadius: 14,
-  marginBottom: 12,
-  borderLeftWidth: 4,
-  borderLeftColor: "#1976D2",
-},
+  arrowIcon: {
+    fontSize: 18,
+    marginLeft: 6,
+    color: "#fff",
+  },
+  workerCard: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#1976D2",
+  },
 
-workerTitle: {
-  fontSize: 16,
-  fontWeight: "700",
-  marginBottom: 10,
-  color: "#333",
-},
+  workerTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 10,
+    color: "#333",
+  },
 
-workerRow: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginBottom: 6,
-},
+  workerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
 
-workerLabel: {
-  fontSize: 14,
-  color: "#666",
-},
+  workerLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
 
-workerValue: {
-  fontSize: 14,
-  fontWeight: "600",
-  color: "#333",
-},
-workerPhoto:{
-  width:70,
-  height:70,
-  borderRadius:35,
-  marginBottom:10
-}
+  workerValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  workerPhoto: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: 10
+  }
 });
